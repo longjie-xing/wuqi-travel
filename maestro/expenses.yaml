@@ -1,4 +1,6 @@
 # 费用页：从“我的”进费用记账，总额 ¥5,062，各分类金额正确
+# 注意：Maestro 的 assertVisible/tapOn 按节点全文精确匹配，
+# 断言必须写完整节点文本，子串会失败（2026-11-18 第五遍 CI 实测）。
 appId: com.wuqi.travel
 ---
 - launchApp:
@@ -11,20 +13,20 @@ appId: com.wuqi.travel
     text: "我的"
 - extendedWaitUntil:
     visible:
-      text: "费用总额 ¥5,062"
+      text: "行程 7 个事件 · 日历节点 17 个 · 费用总额 ¥5,062"
     timeout: 10000
 - tapOn:
-    text: "费用记账"
+    text: "💰 费用记账 →"
 - extendedWaitUntil:
     visible:
       text: "总额 ¥5,062"
     timeout: 10000
 - assertVisible:
-    text: "交通 ¥2,480"
+    text: "交通 ¥2,480 · 49%"
 - assertVisible:
-    text: "酒店 ¥1,560"
+    text: "酒店 ¥1,560 · 31%"
 - assertVisible:
-    text: "餐饮 ¥486"
+    text: "餐饮 ¥486 · 10%"
 - assertVisible:
-    text: "门票 ¥536"
+    text: "门票 ¥536 · 10%"
 - takeScreenshot: expenses-total

@@ -1,6 +1,9 @@
 # 清单页：家庭游版初始 3/16，勾选一项后变 4/16，切换模板不丢勾选
 # 注意：新鲜安装（clearState）下种子数据只有 f1–f3 三项勾选，
 # 所以初始是 3/16，不是之前真机截图里手动勾过后的 5/16。
+# 注意：Maestro 的 assertVisible/tapOn 按节点全文精确匹配，
+# 断言必须写完整节点文本，子串会失败（2026-11-18 第五遍 CI 实测）；
+# 清单项节点是“✅/⬜ + 两空格 + 名称”，点选也要写全。
 appId: com.wuqi.travel
 ---
 - launchApp:
@@ -16,19 +19,19 @@ appId: com.wuqi.travel
       text: "行李清单"
     timeout: 10000
 - assertVisible:
-    text: "家庭游版 · 3/16 已打包"
+    text: "家庭游版 · 3/16 已打包 · 按模板分别保存，切换不丢勾选"
 # 勾选一项未打包物品（泳衣）
 - tapOn:
-    text: "泳衣"
+    text: "⬜  泳衣"
 - assertVisible:
-    text: "家庭游版 · 4/16 已打包"
+    text: "家庭游版 · 4/16 已打包 · 按模板分别保存，切换不丢勾选"
 # 切换模板再切回，勾选不丢
 - tapOn:
     text: "火车版"
 - assertVisible:
-    text: "火车版 · 1/6 已打包"
+    text: "火车版 · 1/6 已打包 · 按模板分别保存，切换不丢勾选"
 - tapOn:
     text: "家庭游版"
 - assertVisible:
-    text: "家庭游版 · 4/16 已打包"
+    text: "家庭游版 · 4/16 已打包 · 按模板分别保存，切换不丢勾选"
 - takeScreenshot: pack-family-checked

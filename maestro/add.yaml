@@ -1,4 +1,7 @@
 # 添加页：手动加一班高铁（带座位号），保存后在行程页可见
+# 注意：输入框的占位提示是 hintText，不作为节点文本出现，
+# 所以不能断言“座位号”——座位字段的存在由最后保存出的
+# “座位 05车12F”节点端到端证明；点输入框要用完整占位文本。
 appId: com.wuqi.travel
 ---
 - launchApp:
@@ -13,26 +16,29 @@ appId: com.wuqi.travel
     visible:
       text: "手动添加"
     timeout: 10000
-# 选高铁类型：座位字段必须可见（自驾类型会隐藏座位）
+# 选高铁类型：表单完整渲染即证明座位字段已出现（自驾类型会隐藏座位）
 - tapOn:
     text: "高铁 / 火车"
 - assertVisible:
-    text: "座位号"
+    text: "保存到时间线"
 # 选 11/22 日期（时间保持默认 09:15）
 - tapOn:
     text: "2026-11-22"
 # 填标题
 - tapOn:
-    text: "标题 如 CA1831"
+    text: "标题 如 CA1831 北京大兴 → 三亚凤凰"
 - inputText: "G103 北京南 → 上海虹桥"
+- hideKeyboard
 # 填座位号
 - tapOn:
-    text: "座位号"
+    text: "座位号（结构化字段）如 18A / 05车12F"
 - inputText: "05车12F"
+- hideKeyboard
 # 填检票口
 - tapOn:
-    text: "登机口"
+    text: "登机口 / 检票口 如 C18"
 - inputText: "3检票口"
+- hideKeyboard
 # 保存并跳到行程页
 - tapOn:
     text: "保存到时间线"
