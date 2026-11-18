@@ -1,0 +1,51 @@
+# 添加页：手动加一班高铁（带座位号），保存后在行程页可见
+appId: com.wuqi.travel
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      text: "距登机还有"
+    timeout: 30000
+- tapOn:
+    text: "添加"
+- extendedWaitUntil:
+    visible:
+      text: "手动添加"
+    timeout: 10000
+# 选高铁类型：座位字段必须可见（自驾类型会隐藏座位）
+- tapOn:
+    text: "高铁 / 火车"
+- assertVisible:
+    text: "座位号"
+# 选 11/22 日期（时间保持默认 09:15）
+- tapOn:
+    text: "2026-11-22"
+# 填标题
+- tapOn:
+    text: "标题 如 CA1831"
+- inputText: "G103 北京南 → 上海虹桥"
+# 填座位号
+- tapOn:
+    text: "座位号"
+- inputText: "05车12F"
+# 填检票口
+- tapOn:
+    text: "登机口"
+- inputText: "3检票口"
+# 保存并跳到行程页
+- tapOn:
+    text: "保存到时间线"
+- extendedWaitUntil:
+    visible:
+      text: "已保存"
+    timeout: 10000
+- tapOn:
+    text: "查看行程"
+- extendedWaitUntil:
+    visible:
+      text: "G103 北京南 → 上海虹桥"
+    timeout: 10000
+- assertVisible:
+    text: "座位 05车12F"
+- takeScreenshot: add-saved-train

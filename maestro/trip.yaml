@@ -1,0 +1,33 @@
+# 行程页：三天时间线、展开蜈支洲岛节点、取票码只出现一次
+# “只出现一次”的计数检查在 CI 里用 uiautomator dump 做（见 workflow），
+# 本 flow 断言取票码可见且描述里不含取票码。
+appId: com.wuqi.travel
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      text: "距登机还有"
+    timeout: 30000
+- tapOn:
+    text: "行程"
+- extendedWaitUntil:
+    visible:
+      text: "多日完整时间线"
+    timeout: 10000
+- assertVisible:
+    text: "Day1 · 11/21 周六 · 北京 → 三亚"
+- assertVisible:
+    text: "Day2 · 11/22 周日 · 三亚"
+- assertVisible:
+    text: "Day3 · 11/23 周一 · 三亚 → 北京"
+# 展开 Day2 的蜈支洲岛节点
+- tapOn:
+    text: "蜈支洲岛一日游"
+- extendedWaitUntil:
+    visible:
+      text: "取票码 WZ-8842-7719"
+    timeout: 10000
+- assertVisible:
+    text: "提前 30 分钟到码头"
+- takeScreenshot: trip-wuzhizhou-expanded

@@ -1,0 +1,30 @@
+# 费用页：从“我的”进费用记账，总额 ¥5,062，各分类金额正确
+appId: com.wuqi.travel
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      text: "距登机还有"
+    timeout: 30000
+- tapOn:
+    text: "我的"
+- extendedWaitUntil:
+    visible:
+      text: "费用总额 ¥5,062"
+    timeout: 10000
+- tapOn:
+    text: "费用记账"
+- extendedWaitUntil:
+    visible:
+      text: "总额 ¥5,062"
+    timeout: 10000
+- assertVisible:
+    text: "交通 ¥2,480"
+- assertVisible:
+    text: "酒店 ¥1,560"
+- assertVisible:
+    text: "餐饮 ¥486"
+- assertVisible:
+    text: "门票 ¥536"
+- takeScreenshot: expenses-total

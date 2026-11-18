@@ -1,0 +1,27 @@
+# 首页：倒计时、航班主信息、延误顺延文案、今日待办
+# 回归：2026-11-17 真机 11/NaN bug —— 延误卡片绝不能出现 NaN
+appId: com.wuqi.travel
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      text: "距登机还有"
+    timeout: 30000
+# 倒计时标题与航班主信息
+- assertVisible:
+    text: "CA1831 · 11/21 09:15 起飞"
+# 延误顺延文案：出发提醒 11/21 06:15 / 11/21 08:15（-3h / -1h）
+- assertVisible:
+    text: "11/21 06:15"
+- assertVisible:
+    text: "11/21 08:15"
+# 回归断言：文案里绝不能出现 NaN
+- assertNotVisible:
+    text: "NaN"
+# 今日待办
+- assertVisible:
+    text: "今日待办"
+- assertVisible:
+    text: "CA1831 · 北京大兴 → 三亚凤凰"
+- takeScreenshot: home

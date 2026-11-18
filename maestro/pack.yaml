@@ -1,0 +1,34 @@
+# 清单页：家庭游版初始 3/16，勾选一项后变 4/16，切换模板不丢勾选
+# 注意：新鲜安装（clearState）下种子数据只有 f1–f3 三项勾选，
+# 所以初始是 3/16，不是之前真机截图里手动勾过后的 5/16。
+appId: com.wuqi.travel
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      text: "距登机还有"
+    timeout: 30000
+- tapOn:
+    text: "清单"
+- extendedWaitUntil:
+    visible:
+      text: "行李清单"
+    timeout: 10000
+- assertVisible:
+    text: "家庭游版 · 3/16 已打包"
+# 勾选一项未打包物品（泳衣）
+- tapOn:
+    text: "泳衣"
+- assertVisible:
+    text: "家庭游版 · 4/16 已打包"
+# 切换模板再切回，勾选不丢
+- tapOn:
+    text: "火车版"
+- assertVisible:
+    text: "火车版 · 1/6 已打包"
+- tapOn:
+    text: "家庭游版"
+- assertVisible:
+    text: "家庭游版 · 4/16 已打包"
+- takeScreenshot: pack-family-checked

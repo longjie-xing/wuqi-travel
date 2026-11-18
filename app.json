@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#2563EB",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "package": "com.wuqi.travel",
+      "permissions": [
+        "READ_CALENDAR",
+        "WRITE_CALENDAR",
+        "POST_NOTIFICATIONS",
+        "READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "icon": "./assets/icon.png",
+    "ios": {
+      "bundleIdentifier": "com.wuqi.travel",
+      "infoPlist": {
+        "NSCalendarsUsageDescription": "将行程提醒同步到你的手机日历",
+        "NSPhotoLibraryUsageDescription": "上传机票、车票、酒店订单截图进行识别"
+      },
+      "supportsTablet": true
+    },
+    "name": "吾栖出行",
+    "orientation": "portrait",
+    "scheme": "wuqi-travel",
+    "slug": "wuqi-travel",
+    "userInterfaceStyle": "automatic",
+    "version": "1.0.0",
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "18d5262e-93eb-4d28-9050-25c551ad2761"
+      }
+    }
+  }
+}
