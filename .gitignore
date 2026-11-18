@@ -1,0 +1,13 @@
+node_modules/
+.expo/
+dist/
+*.log
+.DS_Store
+# E2E 本地产物（CI 里生成，不提交）
+maestro-results/
+window_dump.xml
+app.apk
+*.apk
+# 本地原生构建产物
+android/build/
+ios/build/
