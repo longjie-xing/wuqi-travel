@@ -40,6 +40,12 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          # setup-android v3 默认装 'tools platform-tools'，但 Google 已下架
+          # 遗留的 tools 包，sdkmanager 会报 Failed to find package 'tools'
+          # 而退出 1；只装 platform-tools 即可（模拟器所需组件由
+          # android-emulator-runner 自己装）。
+          packages: platform-tools
       - name: Install dependencies
         run: npm ci
       - name: Download preview APK (EAS build 2266318e)
