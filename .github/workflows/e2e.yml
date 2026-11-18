@@ -1,0 +1,89 @@
+# 吾栖出行：逻辑层（Jest + tsc）与 UI 层（Maestro + 云端模拟器）一次跑完。
+# 本机云端没有 KVM，跑不了模拟器；GitHub 的 Linux runner 自带 KVM，
+# 所以端到端测试只在 CI 里跑，不在本地跑。
+# 注意：workflow 里没有任何密钥 / token / 密码；EAS APK 是公开构建
+# 产物下载地址，直接 curl 可得，不用鉴权。
+name: E2E (Maestro)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    name: Unit tests (Jest + tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc --noEmit
+
+  e2e:
+    name: E2E tests (Maestro + emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Install dependencies
+        run: npm ci
+      - name: Download preview APK (EAS build 2266318e)
+        run: curl -L -o app.apk https://expo.dev/artifacts/eas/zIr-ut2mY_Pfl-PNR-he2JNZVDW0uSD0KrtLHX15ToM.apk
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Run Maestro flows on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            adb install app.apk
+            set +e
+            maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/
+            MAESTRO_EXIT=$?
+            set -e
+            echo "maestro exit code: $MAESTRO_EXIT"
+            # 补充检查：取票码 WZ-8842-7719 在当前屏只出现一次。
+            # trip flow 是最后跑的，结束时正停在展开后的行程页；
+            # 若 trip flow 中途失败，当前屏不一定是行程页，此时只告警、不判失败。
+            adb shell uiautomator dump /sdcard/window_dump.xml || true
+            adb pull /sdcard/window_dump.xml window_dump.xml || true
+            if [ -f window_dump.xml ]; then
+              COUNT=$(grep -o 'WZ-8842-7719' window_dump.xml | wc -l)
+              echo "ticket code occurrences on current screen: $COUNT"
+              if [ "$COUNT" != "1" ]; then
+                echo "::warning::取票码 WZ-8842-7719 在当前屏出现 $COUNT 次，期望 1 次（可能 trip flow 未展开节点）"
+              fi
+            fi
+            exit $MAESTRO_EXIT
+      - name: Upload Maestro artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-results
+          path: |
+            maestro-results/
+            window_dump.xml
+          if-no-files-found: warn
+          retention-days: 14
