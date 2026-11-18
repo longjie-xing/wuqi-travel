@@ -5,6 +5,13 @@ appId: com.wuqi.travel
 ---
 - launchApp:
     clearState: true
+# 若系统桌面（Pixel Launcher）无响应弹窗盖住了 App，点“Wait”消掉再继续；
+# 没弹窗时这一步直接跳过（第六遍 CI：弹窗盖住屏幕导致 5 个 flow 全败）。
+- runFlow:
+    when:
+      visible: "Pixel Launcher isn't responding"
+    commands:
+      - tapOn: "Wait"
 - extendedWaitUntil:
     visible:
       text: "距登机还有"
