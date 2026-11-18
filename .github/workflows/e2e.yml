@@ -70,9 +70,25 @@ jobs:
             adb shell settings put global package_verifier_enable 0 || true
             adb shell settings put global verifier_verify_adb_installs 0 || true
             adb install app.apk || { echo "adb install failed, retrying in 30s"; sleep 30; adb install -r app.apk; }
+            # 等模拟器彻底启动稳当再跑 Maestro：驱动默认只等 15 秒，
+            # 冷启动的 CI 模拟器常常不够（Maestro Android driver did
+            # not start up in time），提到 120 秒；跑之前再稳 30 秒。
+            adb wait-for-device
+            timeout 300 adb shell 'while [ "$(getprop sys.boot_completed)" != 1 ]; do sleep 2; done' || true
+            sleep 30
+            export MAESTRO_DRIVER_STARTUP_TIMEOUT=120000
             set +e
-            maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/
-            MAESTRO_EXIT=$?
+            maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/ 2>&1 | tee maestro-run-1.log
+            MAESTRO_EXIT=${PIPESTATUS[0]}
+            # 只有驱动根本没起来（一个 flow 都没跑）时才重试一次：
+            # 中途失败再全量重跑会撞上已变的状态（如清单已勾选），
+            # 那种失败就直接报出来，不重试。
+            if [ "$MAESTRO_EXIT" -ne 0 ] && grep -q "did not start up in time" maestro-run-1.log; then
+              echo "Maestro driver failed to start, retrying once in 30s"
+              sleep 30
+              maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/ 2>&1 | tee maestro-run-2.log
+              MAESTRO_EXIT=${PIPESTATUS[0]}
+            fi
             set -e
             echo "maestro exit code: $MAESTRO_EXIT"
             # 补充检查：取票码 WZ-8842-7719 在当前屏只出现一次。
