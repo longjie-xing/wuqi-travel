@@ -78,45 +78,28 @@ jobs:
             adb shell settings put global package_verifier_enable 0 || true
             adb shell settings put global verifier_verify_adb_installs 0 || true
             adb install app.apk || { echo "adb install failed, retrying in 30s"; sleep 30; adb install -r app.apk; }
-            # 等模拟器彻底启动稳当再跑 Maestro：驱动默认只等 15 秒，
-            # 冷启动的 CI 模拟器常常不够（Maestro Android driver did
-            # not start up in time），提到 300 秒；跑之前再稳 30 秒。
+            # 等模拟器彻底启动稳当再跑 Maestro。
             adb wait-for-device
             timeout 300 adb shell 'while [ "$(getprop sys.boot_completed)" != 1 ]; do sleep 2; done' || true
             sleep 30
-            export MAESTRO_DRIVER_STARTUP_TIMEOUT=300000
-            set +e
-            # 注意：本步骤实际用 /usr/bin/sh（dash）逐行执行，不能用
-            # bash 才有的 ${PIPESTATUS[0]}（会报 Bad substitution 提前
-            # 崩掉、重试也跑不成）；改成重定向到文件再取 $?。
-            maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/ > maestro-run-1.log 2>&1
-            MAESTRO_EXIT=$?
+            # 注意：本步骤由 runner 逐行执行、失败即停，每行都是独立的 sh，
+            # 所以不能用多行 if、不能用 export 跨行传环境、不能用 set +e、
+            # 不能用 bash 才有的 ${PIPESTATUS[0]}；状态靠文件在行间传递，
+            # 环境变量直接写在命令前面，退出码先写进文件、最后再 exit。
+            MAESTRO_DRIVER_STARTUP_TIMEOUT=300000 maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/ > maestro-run-1.log 2>&1; echo $? > maestro-exit.txt
             cat maestro-run-1.log || true
             # 只有驱动根本没起来（一个 flow 都没跑）时才重试一次：
             # 中途失败再全量重跑会撞上已变的状态（如清单已勾选），
             # 那种失败就直接报出来，不重试。
-            if [ "$MAESTRO_EXIT" -ne 0 ] && grep -q "did not start up in time" maestro-run-1.log; then
-              echo "Maestro driver failed to start, retrying once in 30s"
-              sleep 30
-              maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/ > maestro-run-2.log 2>&1
-              MAESTRO_EXIT=$?
-              cat maestro-run-2.log || true
-            fi
-            set -e
-            echo "maestro exit code: $MAESTRO_EXIT"
+            grep -q "did not start up in time" maestro-run-1.log && { echo "Maestro driver failed to start, retrying once in 30s"; sleep 30; MAESTRO_DRIVER_STARTUP_TIMEOUT=300000 maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/ > maestro-run-2.log 2>&1; echo $? > maestro-exit.txt; cat maestro-run-2.log || true; } || true
+            echo "maestro exit code: $(cat maestro-exit.txt 2>/dev/null || echo 1)"
             # 补充检查：取票码 WZ-8842-7719 在当前屏只出现一次。
             # trip flow 是最后跑的，结束时正停在展开后的行程页；
             # 若 trip flow 中途失败，当前屏不一定是行程页，此时只告警、不判失败。
             adb shell uiautomator dump /sdcard/window_dump.xml || true
             adb pull /sdcard/window_dump.xml window_dump.xml || true
-            if [ -f window_dump.xml ]; then
-              COUNT=$(grep -o 'WZ-8842-7719' window_dump.xml | wc -l)
-              echo "ticket code occurrences on current screen: $COUNT"
-              if [ "$COUNT" != "1" ]; then
-                echo "::warning::取票码 WZ-8842-7719 在当前屏出现 $COUNT 次，期望 1 次（可能 trip flow 未展开节点）"
-              fi
-            fi
-            exit $MAESTRO_EXIT
+            if [ -f window_dump.xml ]; then COUNT=$(grep -o 'WZ-8842-7719' window_dump.xml | wc -l); echo "ticket code occurrences on current screen: $COUNT"; if [ "$COUNT" != "1" ]; then echo "::warning::取票码 WZ-8842-7719 在当前屏出现 $COUNT 次，期望 1 次（可能 trip flow 未展开节点）"; fi; fi
+            exit $(cat maestro-exit.txt 2>/dev/null || echo 1)
       - name: Upload Maestro artifacts
         if: always()
         uses: actions/upload-artifact@v4
