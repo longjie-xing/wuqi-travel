@@ -64,7 +64,12 @@ jobs:
           disable-animations: true
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            adb install app.apk
+            # 关闭安装包校验：API 35 模拟器上安装 APK 时完整性校验会超时
+            #（INSTALL_FAILED_VERIFICATION_FAILURE），关掉后安装不再走校验；
+            # 若仍失败，等 30 秒重试一次。
+            adb shell settings put global package_verifier_enable 0 || true
+            adb shell settings put global verifier_verify_adb_installs 0 || true
+            adb install app.apk || { echo "adb install failed, retrying in 30s"; sleep 30; adb install -r app.apk; }
             set +e
             maestro test --test-output-dir maestro-results --format junit --output maestro-results/report.xml maestro/
             MAESTRO_EXIT=$?
